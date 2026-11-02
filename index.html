@@ -6,10 +6,11 @@
   <meta name="theme-color" content="#080d16">
   <meta name="description" content="JARVIS HOME — asistente personal de voz.">
   <title>JARVIS HOME — Asistente de voz</title>
-  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://esm.sh" crossorigin>
   <link rel="preconnect" href="https://api.fish.audio" crossorigin>
+  <script src="./config.js"></script>
   <style>
-    :root { color-scheme:dark; --bg:#080d16; --panel:rgba(15,25,40,.82); --border:rgba(117,183,225,.17); --muted:#8da3b8; --text:#eaf4ff; --cyan:#70d9f5; --green:#78e6bd; --amber:#f4c77d; }
+    :root { color-scheme:dark; --bg:#080d16; --panel:rgba(15,25,40,.84); --border:rgba(117,183,225,.18); --muted:#8da3b8; --text:#eaf4ff; --cyan:#70d9f5; --green:#78e6bd; --amber:#f4c77d; --red:#ff8a8a; }
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(ellipse at 50% 24%,rgba(25,111,153,.19),transparent 38%),radial-gradient(ellipse at 82% 82%,rgba(20,74,112,.12),transparent 36%),var(--bg); overflow-x:hidden; }
     body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.14; background-image:linear-gradient(rgba(111,178,219,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(111,178,219,.12) 1px,transparent 1px); background-size:44px 44px; mask-image:linear-gradient(to bottom,black,transparent 78%); }
@@ -20,28 +21,44 @@
     .brand small { display:block; color:var(--muted); font-weight:500; letter-spacing:.22em; font-size:9px; margin-top:3px; }
     .header-status { display:flex; align-items:center; gap:9px; color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
     .status-dot { width:7px; height:7px; border-radius:50%; background:var(--amber); box-shadow:0 0 12px currentColor; }
-    main { padding:55px 0 42px; }
-    .intro { text-align:center; margin-bottom:32px; }
+    main { padding:50px 0 42px; }
+    .intro { text-align:center; margin-bottom:14px; }
     .eyebrow { color:var(--cyan); font-size:10px; letter-spacing:.28em; text-transform:uppercase; font-weight:700; }
     h1 { margin:12px 0 8px; font-size:clamp(35px,7vw,66px); letter-spacing:.13em; font-weight:500; text-shadow:0 0 32px rgba(93,203,241,.22); }
     .subtitle { margin:0 auto; max-width:610px; color:var(--muted); line-height:1.65; font-size:14px; }
-    .core-wrap { display:flex; justify-content:center; margin:18px auto 30px; }
-    .core { width:130px; height:130px; border-radius:50%; display:grid; place-items:center; position:relative; border:1px solid rgba(112,217,245,.4); background:radial-gradient(circle,rgba(49,160,201,.22) 0%,rgba(22,61,86,.22) 48%,rgba(8,13,22,.9) 72%); box-shadow:0 0 35px rgba(46,166,212,.15),inset 0 0 35px rgba(46,166,212,.12); }
-    .core::before,.core::after { content:""; position:absolute; border:1px solid rgba(112,217,245,.28); border-radius:50%; inset:-11px; animation:orbit 12s linear infinite; }
+    .core-wrap { display:flex; flex-direction:column; align-items:center; gap:13px; margin:30px auto 34px; }
+    .core { width:142px; height:142px; border-radius:50%; display:grid; place-items:center; position:relative; border:1px solid rgba(112,217,245,.4); background:radial-gradient(circle,rgba(49,160,201,.22) 0%,rgba(22,61,86,.22) 48%,rgba(8,13,22,.9) 72%); box-shadow:0 0 35px rgba(46,166,212,.15),inset 0 0 35px rgba(46,166,212,.12); cursor:pointer; color:inherit; transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
+    .core:hover { transform:scale(1.035); border-color:rgba(112,217,245,.78); box-shadow:0 0 46px rgba(46,166,212,.25),inset 0 0 35px rgba(46,166,212,.15); }
+    .core:focus-visible,.action:focus-visible { outline:2px solid var(--cyan); outline-offset:5px; }
+    .core:disabled { cursor:wait; opacity:.8; }
+    .core::before,.core::after { content:""; position:absolute; border:1px solid rgba(112,217,245,.28); border-radius:50%; inset:-11px; animation:orbit 12s linear infinite; pointer-events:none; }
     .core::after { inset:-22px; border-color:rgba(112,217,245,.11); animation-direction:reverse; animation-duration:20s; }
-    .core-inner { width:75px; height:75px; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle at 40% 35%,#a4edff,#2899bf 44%,#0b3048 78%); box-shadow:0 0 28px rgba(94,215,249,.48); color:#061520; font-size:24px; font-weight:800; }
+    .core-inner { width:82px; height:82px; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle at 40% 35%,#a4edff,#2899bf 44%,#0b3048 78%); box-shadow:0 0 28px rgba(94,215,249,.48); color:#061520; font-size:27px; font-weight:800; }
+    .core.listening { border-color:rgba(120,230,189,.8); box-shadow:0 0 42px rgba(120,230,189,.25),inset 0 0 30px rgba(120,230,189,.14); }
+    .core.thinking { border-color:rgba(244,199,125,.8); animation:pulse 1.2s ease-in-out infinite alternate; }
+    .core.speaking { border-color:rgba(112,217,245,.9); box-shadow:0 0 56px rgba(94,215,249,.35),inset 0 0 42px rgba(94,215,249,.2); animation:pulse .7s ease-in-out infinite alternate; }
     @keyframes orbit { to { transform:rotate(360deg); } }
+    @keyframes pulse { from { transform:scale(1); } to { transform:scale(1.045); } }
+    #voice-status { color:var(--cyan); font-size:11px; text-transform:uppercase; letter-spacing:.18em; text-align:center; min-height:16px; }
+    .call-actions { min-height:38px; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+    .action { border:1px solid rgba(112,217,245,.32); background:rgba(19,48,67,.72); color:#dff7ff; border-radius:999px; padding:10px 20px; font:600 12px inherit; cursor:pointer; transition:background .2s ease,border-color .2s ease; }
+    .action:hover { background:rgba(30,83,111,.8); border-color:rgba(112,217,245,.7); }
+    .action.danger { border-color:rgba(255,138,138,.4); background:rgba(88,35,43,.48); color:#ffd7d7; }
+    .action[hidden] { display:none; }
     .layout { display:grid; grid-template-columns:minmax(0,1fr) 270px; gap:18px; align-items:start; }
     .panel { border:1px solid var(--border); background:var(--panel); border-radius:20px; box-shadow:0 20px 70px rgba(0,0,0,.22); backdrop-filter:blur(14px); }
     .agent-panel { padding:18px; min-height:230px; }
     .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
     .panel-title { font-size:13px; font-weight:650; letter-spacing:.04em; }
     .panel-tag { color:var(--green); font-size:10px; text-transform:uppercase; letter-spacing:.12em; }
-    #agent-slot { min-height:145px; display:grid; place-items:center; }
-    fish-agent { display:block; width:100%; min-height:350px; }
-    .setup-state { width:100%; text-align:center; padding:28px 18px; border:1px dashed rgba(112,217,245,.25); border-radius:15px; color:var(--muted); line-height:1.65; }
-    .setup-state strong { display:block; color:var(--text); font-size:14px; margin-bottom:7px; }
-    .setup-state code { color:var(--cyan); font-size:12px; }
+    #conversation-log { min-height:150px; max-height:310px; overflow:auto; display:flex; flex-direction:column; gap:10px; padding:6px 2px; }
+    .empty-state { width:100%; min-height:138px; display:grid; place-items:center; text-align:center; padding:22px; border:1px dashed rgba(112,217,245,.22); border-radius:15px; color:var(--muted); font-size:12px; line-height:1.6; }
+    .message { max-width:86%; padding:10px 13px; border-radius:13px; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .message.user { align-self:flex-end; color:#e8f8ff; background:rgba(37,107,139,.26); border:1px solid rgba(112,217,245,.16); }
+    .message.agent { align-self:flex-start; color:#edf5ff; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.07); }
+    .message-label { display:block; color:var(--muted); font-size:9px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:3px; }
+    .diagnostic { margin-top:12px; border-radius:12px; border:1px solid rgba(255,138,138,.22); background:rgba(88,35,43,.2); color:#ffd7d7; padding:11px 13px; font-size:11px; line-height:1.55; }
+    .diagnostic[hidden] { display:none; }
     .side { padding:19px; }
     .side h2 { margin:0 0 15px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
     .info-row { display:flex; gap:10px; align-items:flex-start; padding:12px 0; border-top:1px solid rgba(150,200,230,.09); }
@@ -50,87 +67,187 @@
     .info-row span { display:block; color:var(--muted); font-size:11px; line-height:1.5; }
     .notice { margin-top:18px; padding:13px 15px; border-radius:13px; background:rgba(244,199,125,.07); border:1px solid rgba(244,199,125,.18); color:#d8c6a4; font-size:11px; line-height:1.6; }
     footer { color:#61788d; text-align:center; padding:20px 0 30px; font-size:10px; letter-spacing:.07em; }
-    a { color:var(--cyan); }
-    @media(max-width:780px) { header{height:66px} main{padding-top:38px} .layout{grid-template-columns:1fr} .side{order:2} .agent-panel{padding:13px} h1{letter-spacing:.09em} }
+    @media(max-width:780px) { header{height:66px} main{padding-top:38px} .layout{grid-template-columns:1fr} .side{order:2} .agent-panel{padding:13px} h1{letter-spacing:.09em} .core{width:128px;height:128px} }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; } }
   </style>
-  <script src="./config.js"></script>
-  <script async src="https://unpkg.com/@fishaudio/agent-widget-embed" type="text/javascript"></script>
 </head>
 <body>
   <div class="shell">
     <header>
       <div class="brand"><div class="brand-mark">J</div><div>JARVIS <small>HOME INTELLIGENCE</small></div></div>
-      <div class="header-status"><span class="status-dot" id="status-dot"></span><span id="status-label">AGENTE NO CONFIGURADO</span></div>
+      <div class="header-status"><span class="status-dot" id="status-dot"></span><span id="status-label">LISTO PARA CONECTAR</span></div>
     </header>
     <main>
       <section class="intro">
-        <div class="eyebrow">Personal voice interface · Prototype 01</div>
+        <div class="eyebrow">Personal voice interface · Prototype 02</div>
         <h1>J.A.R.V.I.S.</h1>
-        <p class="subtitle">Su asistente personal está listo para escuchar. Inicie una sesión de voz para conversar naturalmente, sin escribir.</p>
+        <p class="subtitle">Tu asistente personal está listo para escucharte. Pulsa el núcleo para iniciar una conversación por voz, sin ventanas flotantes ni mensajes escritos.</p>
       </section>
-      <div class="core-wrap" aria-hidden="true"><div class="core"><div class="core-inner">J</div></div></div>
+      <div class="core-wrap">
+        <button id="start-call" class="core" type="button" aria-label="Iniciar conversación por voz con JARVIS">
+          <span class="core-inner">J</span>
+        </button>
+        <div id="voice-status" role="status" aria-live="polite">Pulsa el núcleo para hablar</div>
+        <div class="call-actions">
+          <button id="end-call" class="action danger" type="button" hidden>Finalizar conversación</button>
+        </div>
+      </div>
       <section class="layout">
         <div class="panel agent-panel">
-          <div class="panel-head"><div class="panel-title">CANAL DE VOZ</div><div class="panel-tag">● INTERFAZ DE VOZ</div></div>
-          <div id="agent-slot"><div class="setup-state" id="setup-state"><strong>JARVIS está esperando su configuración</strong>Añada el identificador de su agente público de Fish Audio en <code>config.js</code>.<br>Este sitio no necesita ni debe contener su API Key.</div></div>
+          <div class="panel-head"><div class="panel-title">CONVERSACIÓN</div><div class="panel-tag">● CANAL DE VOZ DIRECTO</div></div>
+          <div id="conversation-log" aria-live="polite">
+            <div class="empty-state" id="empty-state">Aquí aparecerá la transcripción de la conversación.<br>Tu voz se enviará directamente al agente y JARVIS responderá por los altavoces.</div>
+          </div>
+          <div class="diagnostic" id="diagnostic" role="alert" hidden></div>
         </div>
         <aside class="panel side">
           <h2>Estado del sistema</h2>
-          <div class="info-row"><div class="info-icon">◉</div><div><strong>Micrófono</strong><span>El navegador solicitará permiso al iniciar la conversación.</span></div></div>
-          <div class="info-row"><div class="info-icon">◌</div><div><strong>Voz JARVIS</strong><span>Se configura en el agente de Fish Audio con la voz Jarvis (Latin American Spanish).</span></div></div>
-          <div class="info-row"><div class="info-icon">⌁</div><div><strong>Conexión</strong><span>La sesión de voz requiere Internet y una conexión segura HTTPS.</span></div></div>
-          <div class="notice">Prototipo web: mantenga esta pestaña abierta durante la conversación. Esta versión no escucha continuamente la palabra «JARVIS» en segundo plano ni controla todavía dispositivos físicos.</div>
-          <div class="notice" id="widget-diagnostics" hidden aria-live="polite"></div>
+          <div class="info-row"><div class="info-icon">◉</div><div><strong>Micrófono</strong><span id="mic-state">Se solicitará permiso al iniciar la conversación.</span></div></div>
+          <div class="info-row"><div class="info-icon">◌</div><div><strong>Voz JARVIS</strong><span>Jarvis (Latin American Spanish), configurada en Fish Audio.</span></div></div>
+          <div class="info-row"><div class="info-icon">⌁</div><div><strong>Conexión</strong><span id="connection-state">Agente público de Fish Audio · WebRTC.</span></div></div>
+          <div class="notice">Prototipo web: mantén esta pestaña abierta durante la conversación. El navegador debe permanecer activo; esta versión todavía no escucha continuamente la palabra «JARVIS» en segundo plano ni controla dispositivos físicos.</div>
         </aside>
       </section>
     </main>
-    <footer>JARVIS HOME · VOICE ASSISTANT PROTOTYPE · NO API KEYS IN THE FRONTEND</footer>
+    <footer>JARVIS HOME · DIRECT VOICE INTERFACE · NO API KEYS IN THE FRONTEND</footer>
   </div>
-  <script>
-    (() => {
-      const id = window.JARVIS_CONFIG?.agentId?.trim();
-      const slot = document.getElementById('agent-slot');
-      const state = document.getElementById('setup-state');
-      const statusLabel = document.getElementById('status-label');
-      const statusDot = document.getElementById('status-dot');
-      if (!id || id === 'PEGA_AQUI_EL_AGENT_ID_PUBLICO') return;
-      if (state) state.remove();
-      const agent = document.createElement('fish-agent');
-      agent.setAttribute('agent-id', id);
-      agent.setAttribute('agent-name', 'JARVIS HOME');
-      agent.setAttribute('greeting', 'Hola. Soy JARVIS. ¿En qué puedo ayudarte?');
-      agent.setAttribute('language', 'es');
-      agent.setAttribute('aria-label', 'Asistente de voz JARVIS');
+  <script type="module">
+    import { AgentSession } from "https://esm.sh/@fishaudio/agent-client@0.3.0?bundle";
 
-      // Diagnóstico visible: Fish Audio expone códigos concretos en este evento.
-      const diagnostics = document.getElementById('widget-diagnostics');
-      agent.addEventListener('fish-agent:connect', () => {
-        statusLabel.textContent = 'CONECTADO';
-        statusDot.style.background = 'var(--green)';
-        diagnostics.hidden = false;
-        diagnostics.textContent = 'Conexión establecida con Fish Audio. JARVIS está escuchando.';
-      });
-      agent.addEventListener('fish-agent:error', (event) => {
-        const detail = event.detail || {};
-        const code = detail.code || 'error_sin_codigo';
-        const message = detail.message || 'Fish Audio no proporcionó más detalles.';
-        statusLabel.textContent = 'ERROR DE CONEXIÓN';
-        statusDot.style.background = 'var(--amber)';
-        diagnostics.hidden = false;
-        diagnostics.textContent = 'Diagnóstico Fish Audio: ' + code + ' — ' + message;
-      });
-      agent.addEventListener('fish-agent:disconnect', (event) => {
-        const detail = event.detail || {};
-        if (detail.reason && detail.reason !== 'user_hangup') {
-          diagnostics.hidden = false;
-          diagnostics.textContent = 'La sesión terminó: ' + detail.reason;
-        }
-      });
+    const agentId = window.JARVIS_CONFIG?.agentId?.trim();
+    const startButton = document.getElementById("start-call");
+    const endButton = document.getElementById("end-call");
+    const statusLabel = document.getElementById("status-label");
+    const statusDot = document.getElementById("status-dot");
+    const voiceStatus = document.getElementById("voice-status");
+    const core = startButton;
+    const log = document.getElementById("conversation-log");
+    const emptyState = document.getElementById("empty-state");
+    const diagnostic = document.getElementById("diagnostic");
+    const micState = document.getElementById("mic-state");
+    const connectionState = document.getElementById("connection-state");
+    let session = null;
+    let connecting = false;
 
-      slot.appendChild(agent);
-      statusLabel.textContent = 'AGENTE CONFIGURADO';
-      statusDot.style.background = 'var(--green)';
-    })();
+    function setStatus(state, label) {
+      statusLabel.textContent = label;
+      voiceStatus.textContent = label;
+      statusDot.style.background = state === "error" ? "var(--red)" :
+        state === "listening" ? "var(--green)" :
+        state === "thinking" ? "var(--amber)" : "var(--cyan)";
+      core.classList.remove("listening", "thinking", "speaking");
+      if (["listening", "thinking", "speaking"].includes(state)) core.classList.add(state);
+    }
+
+    function showError(error) {
+      const code = error?.code || "error_desconocido";
+      const message = error?.message || "No se pudo iniciar la sesión.";
+      const statusCode = error?.statusCode ? " (HTTP " + error.statusCode + ")" : "";
+      diagnostic.hidden = false;
+      diagnostic.textContent = "Fish Audio: " + code + statusCode + " — " + message;
+      connectionState.textContent = "Error de sesión: " + code + ".";
+      setStatus("error", "ERROR DE CONEXIÓN");
+    }
+
+    function addMessage(role, text) {
+      if (!text) return;
+      if (emptyState) emptyState.remove();
+      const article = document.createElement("div");
+      article.className = "message " + (role === "user" ? "user" : "agent");
+      const label = document.createElement("span");
+      label.className = "message-label";
+      label.textContent = role === "user" ? "TÚ" : "JARVIS";
+      const body = document.createElement("span");
+      body.textContent = text;
+      article.append(label, body);
+      log.appendChild(article);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function startConversation() {
+      if (connecting || session) return;
+      if (!agentId || agentId === "PEGA_AQUI_EL_AGENT_ID_PUBLICO") {
+        showError({code:"agent_id_missing",message:"Falta configurar el identificador del agente."});
+        return;
+      }
+      connecting = true;
+      startButton.disabled = true;
+      diagnostic.hidden = true;
+      setStatus("thinking", "CONECTANDO CON JARVIS…");
+      micState.textContent = "Solicitando acceso al micrófono…";
+      connectionState.textContent = "Estableciendo sesión segura con Fish Audio…";
+
+      try {
+        session = await AgentSession.start({
+          agentId,
+          timezone: "America/Lima",
+          context: { currentTime: true },
+          callbacks: {
+            onModeChange: (mode) => {
+              const labels = {
+                listening: "TE ESTOY ESCUCHANDO",
+                thinking: "JARVIS ESTÁ PENSANDO",
+                speaking: "JARVIS ESTÁ HABLANDO"
+              };
+              setStatus(mode, labels[mode] || "CONVERSACIÓN ACTIVA");
+              micState.textContent = mode === "listening" ? "Micrófono activo; puedes hablar." : "Micrófono conectado.";
+            },
+            onMessage: ({ role, text }) => addMessage(role, text),
+            onDisconnect: ({ reason }) => {
+              session = null;
+              endButton.hidden = true;
+              startButton.disabled = false;
+              micState.textContent = "Micrófono desconectado.";
+              connectionState.textContent = reason === "user_hangup" ? "Conversación finalizada." : "Sesión finalizada: " + reason;
+              setStatus("ready", "LISTO PARA CONECTAR");
+            },
+            onError: (error) => showError(error)
+          }
+        });
+        endButton.hidden = false;
+        micState.textContent = "Micrófono conectado. Puedes hablar.";
+        connectionState.textContent = "Conectado mediante WebRTC a Fish Audio.";
+        setStatus("listening", "TE ESTOY ESCUCHANDO");
+      } catch (error) {
+        session = null;
+        showError(error);
+        micState.textContent = error?.code === "mic_permission_denied" ?
+          "Permite el acceso al micrófono en los ajustes del navegador." :
+          "No se pudo activar el micrófono o la sesión.";
+        startButton.disabled = false;
+      } finally {
+        connecting = false;
+      }
+    }
+
+    async function endConversation() {
+      if (!session) return;
+      endButton.disabled = true;
+      try {
+        await session.end();
+      } catch (error) {
+        showError(error);
+      } finally {
+        session = null;
+        endButton.disabled = false;
+        endButton.hidden = true;
+        startButton.disabled = false;
+        micState.textContent = "Micrófono desconectado.";
+        connectionState.textContent = "Conversación finalizada.";
+        setStatus("ready", "LISTO PARA CONECTAR");
+      }
+    }
+
+    startButton.addEventListener("click", startConversation);
+    endButton.addEventListener("click", endConversation);
+    window.addEventListener("pagehide", () => {
+      if (session) session.end().catch(() => {});
+    });
+
+    if (!agentId || agentId === "PEGA_AQUI_EL_AGENT_ID_PUBLICO") {
+      startButton.disabled = true;
+      showError({code:"agent_id_missing",message:"Configura el Agent ID en config.js."});
+    }
   </script>
 </body>
 </html>

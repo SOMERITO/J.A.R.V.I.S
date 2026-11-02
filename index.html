@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080d16">
+  <meta name="description" content="JARVIS HOME — asistente personal de voz.">
+  <title>JARVIS HOME — Asistente de voz</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://api.fish.audio" crossorigin>
+  <style>
+    :root { color-scheme:dark; --bg:#080d16; --panel:rgba(15,25,40,.82); --border:rgba(117,183,225,.17); --muted:#8da3b8; --text:#eaf4ff; --cyan:#70d9f5; --green:#78e6bd; --amber:#f4c77d; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(ellipse at 50% 24%,rgba(25,111,153,.19),transparent 38%),radial-gradient(ellipse at 82% 82%,rgba(20,74,112,.12),transparent 36%),var(--bg); overflow-x:hidden; }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.14; background-image:linear-gradient(rgba(111,178,219,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(111,178,219,.12) 1px,transparent 1px); background-size:44px 44px; mask-image:linear-gradient(to bottom,black,transparent 78%); }
+    .shell { width:min(1100px,calc(100% - 36px)); margin:0 auto; position:relative; }
+    header { height:76px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(150,200,230,.1); }
+    .brand { display:flex; align-items:center; gap:12px; letter-spacing:.16em; font-size:12px; font-weight:750; }
+    .brand-mark { width:34px; height:34px; display:grid; place-items:center; border:1px solid rgba(112,217,245,.55); border-radius:11px; color:var(--cyan); box-shadow:0 0 24px rgba(53,185,225,.12),inset 0 0 16px rgba(53,185,225,.08); }
+    .brand small { display:block; color:var(--muted); font-weight:500; letter-spacing:.22em; font-size:9px; margin-top:3px; }
+    .header-status { display:flex; align-items:center; gap:9px; color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+    .status-dot { width:7px; height:7px; border-radius:50%; background:var(--amber); box-shadow:0 0 12px currentColor; }
+    main { padding:55px 0 42px; }
+    .intro { text-align:center; margin-bottom:32px; }
+    .eyebrow { color:var(--cyan); font-size:10px; letter-spacing:.28em; text-transform:uppercase; font-weight:700; }
+    h1 { margin:12px 0 8px; font-size:clamp(35px,7vw,66px); letter-spacing:.13em; font-weight:500; text-shadow:0 0 32px rgba(93,203,241,.22); }
+    .subtitle { margin:0 auto; max-width:610px; color:var(--muted); line-height:1.65; font-size:14px; }
+    .core-wrap { display:flex; justify-content:center; margin:18px auto 30px; }
+    .core { width:130px; height:130px; border-radius:50%; display:grid; place-items:center; position:relative; border:1px solid rgba(112,217,245,.4); background:radial-gradient(circle,rgba(49,160,201,.22) 0%,rgba(22,61,86,.22) 48%,rgba(8,13,22,.9) 72%); box-shadow:0 0 35px rgba(46,166,212,.15),inset 0 0 35px rgba(46,166,212,.12); }
+    .core::before,.core::after { content:""; position:absolute; border:1px solid rgba(112,217,245,.28); border-radius:50%; inset:-11px; animation:orbit 12s linear infinite; }
+    .core::after { inset:-22px; border-color:rgba(112,217,245,.11); animation-direction:reverse; animation-duration:20s; }
+    .core-inner { width:75px; height:75px; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle at 40% 35%,#a4edff,#2899bf 44%,#0b3048 78%); box-shadow:0 0 28px rgba(94,215,249,.48); color:#061520; font-size:24px; font-weight:800; }
+    @keyframes orbit { to { transform:rotate(360deg); } }
+    .layout { display:grid; grid-template-columns:minmax(0,1fr) 270px; gap:18px; align-items:start; }
+    .panel { border:1px solid var(--border); background:var(--panel); border-radius:20px; box-shadow:0 20px 70px rgba(0,0,0,.22); backdrop-filter:blur(14px); }
+    .agent-panel { padding:18px; min-height:230px; }
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+    .panel-title { font-size:13px; font-weight:650; letter-spacing:.04em; }
+    .panel-tag { color:var(--green); font-size:10px; text-transform:uppercase; letter-spacing:.12em; }
+    #agent-slot { min-height:145px; display:grid; place-items:center; }
+    fish-agent { display:block; width:100%; min-height:350px; }
+    .setup-state { width:100%; text-align:center; padding:28px 18px; border:1px dashed rgba(112,217,245,.25); border-radius:15px; color:var(--muted); line-height:1.65; }
+    .setup-state strong { display:block; color:var(--text); font-size:14px; margin-bottom:7px; }
+    .setup-state code { color:var(--cyan); font-size:12px; }
+    .side { padding:19px; }
+    .side h2 { margin:0 0 15px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
+    .info-row { display:flex; gap:10px; align-items:flex-start; padding:12px 0; border-top:1px solid rgba(150,200,230,.09); }
+    .info-icon { color:var(--cyan); font-size:15px; width:20px; text-align:center; }
+    .info-row strong { display:block; font-size:12px; margin-bottom:4px; }
+    .info-row span { display:block; color:var(--muted); font-size:11px; line-height:1.5; }
+    .notice { margin-top:18px; padding:13px 15px; border-radius:13px; background:rgba(244,199,125,.07); border:1px solid rgba(244,199,125,.18); color:#d8c6a4; font-size:11px; line-height:1.6; }
+    footer { color:#61788d; text-align:center; padding:20px 0 30px; font-size:10px; letter-spacing:.07em; }
+    a { color:var(--cyan); }
+    @media(max-width:780px) { header{height:66px} main{padding-top:38px} .layout{grid-template-columns:1fr} .side{order:2} .agent-panel{padding:13px} h1{letter-spacing:.09em} }
+  </style>
+  <script src="./config.js"></script>
+  <script async src="https://unpkg.com/@fishaudio/agent-widget-embed" type="text/javascript"></script>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand"><div class="brand-mark">J</div><div>JARVIS <small>HOME INTELLIGENCE</small></div></div>
+      <div class="header-status"><span class="status-dot" id="status-dot"></span><span id="status-label">AGENTE NO CONFIGURADO</span></div>
+    </header>
+    <main>
+      <section class="intro">
+        <div class="eyebrow">Personal voice interface · Prototype 01</div>
+        <h1>J.A.R.V.I.S.</h1>
+        <p class="subtitle">Su asistente personal está listo para escuchar. Inicie una sesión de voz para conversar naturalmente, sin escribir.</p>
+      </section>
+      <div class="core-wrap" aria-hidden="true"><div class="core"><div class="core-inner">J</div></div></div>
+      <section class="layout">
+        <div class="panel agent-panel">
+          <div class="panel-head"><div class="panel-title">CANAL DE VOZ</div><div class="panel-tag">● INTERFAZ DE VOZ</div></div>
+          <div id="agent-slot"><div class="setup-state" id="setup-state"><strong>JARVIS está esperando su configuración</strong>Añada el identificador de su agente público de Fish Audio en <code>config.js</code>.<br>Este sitio no necesita ni debe contener su API Key.</div></div>
+        </div>
+        <aside class="panel side">
+          <h2>Estado del sistema</h2>
+          <div class="info-row"><div class="info-icon">◉</div><div><strong>Micrófono</strong><span>El navegador solicitará permiso al iniciar la conversación.</span></div></div>
+          <div class="info-row"><div class="info-icon">◌</div><div><strong>Voz JARVIS</strong><span>Se configura en el agente de Fish Audio con la voz Jarvis (Latin American Spanish).</span></div></div>
+          <div class="info-row"><div class="info-icon">⌁</div><div><strong>Conexión</strong><span>La sesión de voz requiere Internet y una conexión segura HTTPS.</span></div></div>
+          <div class="notice">Prototipo web: mantenga esta pestaña abierta durante la conversación. Esta versión no escucha continuamente la palabra «JARVIS» en segundo plano ni controla todavía dispositivos físicos.</div>
+        </aside>
+      </section>
+    </main>
+    <footer>JARVIS HOME · VOICE ASSISTANT PROTOTYPE · NO API KEYS IN THE FRONTEND</footer>
+  </div>
+  <script>
+    (() => {
+      const id = window.JARVIS_CONFIG?.agentId?.trim();
+      const slot = document.getElementById('agent-slot');
+      const state = document.getElementById('setup-state');
+      const statusLabel = document.getElementById('status-label');
+      const statusDot = document.getElementById('status-dot');
+      if (!id || id === 'PEGA_AQUI_EL_AGENT_ID_PUBLICO') return;
+      if (state) state.remove();
+      const agent = document.createElement('fish-agent');
+      agent.setAttribute('agent-id', id);
+      agent.setAttribute('aria-label', 'Asistente de voz JARVIS');
+      slot.appendChild(agent);
+      statusLabel.textContent = 'AGENTE CONFIGURADO';
+      statusDot.style.background = 'var(--green)';
+    })();
+  </script>
+</body>
+</html>

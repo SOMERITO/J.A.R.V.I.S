@@ -1,54 +1,70 @@
-# JARVIS HOME — prototipo web de voz
+# JARVIS HOME — asistente personal por voz
 
-Interfaz estática inicial para conversar por voz con JARVIS desde computadora o móvil, preparada para GitHub Pages y el widget web de Fish Audio Agents.
+Sitio estático en GitHub Pages para conversar con el agente de voz de Fish Audio mediante una interfaz propia, sin el widget flotante predeterminado.
 
-## Estado
+## Arquitectura actual
 
-Esta es la **base de interfaz**. Para habilitar la conversación todavía hace falta crear/publicar un agente de Fish Audio, si Agents está habilitado en la cuenta, y configurar el Agent ID público.
+- **Frontend:** HTML/CSS/JavaScript estático en GitHub Pages.
+- **Voz e inteligencia conversacional:** agente publicado en Fish Audio.
+- **Transporte de audio en tiempo real:** WebRTC, administrado por `@fishaudio/agent-client`.
+- **Autenticación:** modo de agente público de Fish Audio, protegido por el interruptor de acceso público y una lista de orígenes permitidos.
+- **Servidor propio:** no es necesario para el modo público de demostración.
 
-## Configuración
+## Configuración del agente
 
-1. En Fish Audio, abre **Creativo → Agente** y comprueba si puedes crear un agente.
-2. Configura el nombre como `JARVIS HOME`.
-3. Instrucciones sugeridas para el agente:
+El archivo `config.js` contiene únicamente el identificador público del agente:
 
-   > Eres JARVIS, un asistente personal doméstico. Hablas siempre en español latinoamericano, con tono sereno, preciso, educado y natural. Responde como un asistente de voz: usa frases breves y fáciles de escuchar, evita listas largas salvo que te las pidan y pregunta una sola cosa cuando falte información esencial. No afirmes que controlaste luces, enchufes, cerraduras u otros dispositivos si no existe una herramienta conectada que confirme esa acción. En este prototipo puedes conversar y responder preguntas, pero todavía no tienes acceso a dispositivos físicos ni a las tareas del usuario.
+```js
+window.JARVIS_CONFIG = {
+  agentId: "ID_PUBLICO_DEL_AGENTE"
+};
+```
 
-4. En la configuración de voz selecciona **Jarvis (Latin American Spanish)**.
-5. Prueba el agente dentro del builder.
-6. Publica el agente y habilita acceso público si tu cuenta ofrece esa opción. Autoriza el origen de la web publicada, si existe una lista de dominios permitidos.
-7. Copia el **Agent ID** (no el ID de la voz ni una API Key) en `config.js`:
+No colocar claves API ni credenciales privadas en este archivo.
 
-   ```js
-   window.JARVIS_CONFIG = {
-     agentId: "ID_PUBLICO_DEL_AGENTE"
-   };
-   ```
+En Fish Audio, el agente debe:
+1. Tener una versión publicada.
+2. Tener activado **Acceso público**.
+3. Tener permitido el origen exacto `https://somerito.github.io`.
 
-8. Publica estos archivos en la raíz del repositorio y habilita GitHub Pages desde **Settings → Pages**.
-9. Abre la URL HTTPS, inicia la sesión y concede permiso al micrófono.
+Fish Audio verifica el origen del navegador al crear la sesión pública. La sesión se inicia desde el navegador con `AgentSession.start({ agentId })`.
 
-## Seguridad
+## Interfaz de voz
 
-- **Nunca** publiques `FISH_API_KEY` ni `OPENAI_API_KEY` en HTML, JavaScript del navegador, repositorios públicos o commits.
-- El Agent ID no sustituye una API Key. La seguridad del agente debe configurarse en Fish Audio (visibilidad, acceso público y restricciones por origen cuando estén disponibles).
-- Si Fish Audio Agents no está habilitado o no permite acceso público, no expongas una API Key para intentar embeber TTS. En ese caso, la siguiente arquitectura será un backend (por ejemplo, Cloudflare Worker) con secretos configurados del lado del servidor.
+La página utiliza el paquete oficial `@fishaudio/agent-client` (versión fijada en el import CDN de `index.html`) para iniciar una sesión directamente desde el botón central:
 
-## Límites del prototipo
+- Pulsa el núcleo central para iniciar una conversación.
+- El navegador solicita permiso al micrófono.
+- El SDK conecta audio bidireccional en tiempo real por WebRTC.
+- JARVIS muestra transcripciones y responde por los altavoces con la voz configurada en Fish Audio.
+- Pulsa **Finalizar conversación** para cerrar la sesión.
 
-- El navegador requiere HTTPS y permiso de micrófono.
-- La conversación requiere Internet y mantener la pestaña abierta.
-- No incluye escucha continua en segundo plano ni palabra de activación permanente.
-- No controla dispositivos físicos ni se conecta todavía a Home Assistant o Tasky.
-- La disponibilidad de Agents puede depender del acceso beta de Fish Audio.
+La interfaz propia sustituye el widget flotante `<fish-agent>`, por lo que no se abre una ventana superpuesta independiente.
 
-## Publicación con GitHub Pages
+## Publicación en GitHub Pages
 
-En el repositorio: **Settings → Pages → Deploy from a branch → main → /(root) → Save**.
+Repositorio: https://github.com/SOMERITO/J.A.R.V.I.S
 
-## Documentación
+En **Settings → Pages**, seleccionar:
+- Deploy from a branch
+- Branch: `main`
+- Folder: `/(root)`
 
-- Fish Audio Web Agent SDK: https://github.com/fishaudio/fish-agent-sdk-web
-- Fish Audio Developers: https://fish.audio/developers/
+Página: https://somerito.github.io/J.A.R.V.I.S/
+
+## Seguridad y límites
+
+- Nunca publicar `FISH_API_KEY` en HTML, JavaScript del navegador, historial Git o archivos públicos.
+- El Agent ID público no es una API Key, pero permite identificar al agente configurado como público. Fish Audio aplica restricciones de origen y límites de uso.
+- Las sesiones públicas se facturan al espacio de trabajo de Fish Audio y están sujetas a límites por IP y por agente.
+- El navegador requiere HTTPS, permiso de micrófono, altavoces y conexión a Internet.
+- Mantener abierta la pestaña durante la conversación.
+- Esta versión todavía no escucha la palabra de activación en segundo plano ni controla dispositivos físicos. Eso requerirá un satélite de voz o integración futura con Home Assistant.
+
+## Documentación oficial
+
+- Fish Audio Web SDK: https://docs.fish.audio/agents/deploy/web-sdk
+- Fish Audio Public Agents: https://docs.fish.audio/agents/deploy/public-agents
+- Fish Audio Widget: https://docs.fish.audio/agents/deploy/widget
+- SDK oficial: https://github.com/fishaudio/fish-agent-sdk-web
 - GitHub Pages: https://docs.github.com/pages
-- Cloudflare Workers Secrets (para backend futuro): https://developers.cloudflare.com/workers/configuration/secrets/

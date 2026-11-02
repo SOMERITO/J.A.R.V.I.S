@@ -80,6 +80,7 @@
           <div class="info-row"><div class="info-icon">◌</div><div><strong>Voz JARVIS</strong><span>Se configura en el agente de Fish Audio con la voz Jarvis (Latin American Spanish).</span></div></div>
           <div class="info-row"><div class="info-icon">⌁</div><div><strong>Conexión</strong><span>La sesión de voz requiere Internet y una conexión segura HTTPS.</span></div></div>
           <div class="notice">Prototipo web: mantenga esta pestaña abierta durante la conversación. Esta versión no escucha continuamente la palabra «JARVIS» en segundo plano ni controla todavía dispositivos físicos.</div>
+          <div class="notice" id="widget-diagnostics" hidden aria-live="polite"></div>
         </aside>
       </section>
     </main>
@@ -96,7 +97,36 @@
       if (state) state.remove();
       const agent = document.createElement('fish-agent');
       agent.setAttribute('agent-id', id);
+      agent.setAttribute('agent-name', 'JARVIS HOME');
+      agent.setAttribute('greeting', 'Hola. Soy JARVIS. ¿En qué puedo ayudarte?');
+      agent.setAttribute('language', 'es');
       agent.setAttribute('aria-label', 'Asistente de voz JARVIS');
+
+      // Diagnóstico visible: Fish Audio expone códigos concretos en este evento.
+      const diagnostics = document.getElementById('widget-diagnostics');
+      agent.addEventListener('fish-agent:connect', () => {
+        statusLabel.textContent = 'CONECTADO';
+        statusDot.style.background = 'var(--green)';
+        diagnostics.hidden = false;
+        diagnostics.textContent = 'Conexión establecida con Fish Audio. JARVIS está escuchando.';
+      });
+      agent.addEventListener('fish-agent:error', (event) => {
+        const detail = event.detail || {};
+        const code = detail.code || 'error_sin_codigo';
+        const message = detail.message || 'Fish Audio no proporcionó más detalles.';
+        statusLabel.textContent = 'ERROR DE CONEXIÓN';
+        statusDot.style.background = 'var(--amber)';
+        diagnostics.hidden = false;
+        diagnostics.textContent = 'Diagnóstico Fish Audio: ' + code + ' — ' + message;
+      });
+      agent.addEventListener('fish-agent:disconnect', (event) => {
+        const detail = event.detail || {};
+        if (detail.reason && detail.reason !== 'user_hangup') {
+          diagnostics.hidden = false;
+          diagnostics.textContent = 'La sesión terminó: ' + detail.reason;
+        }
+      });
+
       slot.appendChild(agent);
       statusLabel.textContent = 'AGENTE CONFIGURADO';
       statusDot.style.background = 'var(--green)';
